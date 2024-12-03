@@ -1,8 +1,8 @@
 # Реалізація інформаційного та програмного забезпечення
- 
+
 ## SQL-скрипт для створення на початкового наповнення бази даних
 
-```mysql
+```sql
 
 -- MySQL Workbench Forward Engineering
 
@@ -251,3 +251,324 @@ COMMIT;
 
 ## RESTfull сервіс для управління даними
 
+### Підключення до бази даних
+
+```javascript
+import mysql from 'mysql2/promise';
+import dotenv from 'dotenv';
+
+dotenv.config();
+
+const pool = mysql.createPool({
+    host: 'localhost',
+    user: 'root',
+    password: process.env.DB_PASSWORD,
+    database: 'opendatamodel',
+    waitForConnections: true,
+});
+
+export default pool;
+```
+
+### Налаштування сервера
+
+```javascript
+import router from './router/router.js';
+import express from 'express';
+
+const PORT = process.env.PORT || 5000;
+const app = express();
+
+app.use(express.json());
+
+app.use('/api', router);
+
+app.listen(PORT, () => {
+    console.log(`Server is running on http://localhost:${PORT}`);
+});
+```
+
+### Маршрути для User
+
+```javascript
+import { Router } from 'express';
+import UserController from '../controllers/UserController.js';
+const router = Router();
+
+router.get('/all', UserController.getUsers);
+router.get('/:id', UserController.getUserById);
+router.post('/', UserController.createUser);
+router.patch('/:id', UserController.updateUser);
+router.delete('/:id', UserController.deleteUser);
+
+export default router;
+```
+
+### Маршрути для Role
+
+```javascript
+import { Router } from 'express';
+import RoleController from '../controllers/RoleController.js';
+const router = Router();
+
+router.get('/all', RoleController.getRoles);
+router.get('/:id', RoleController.getRoleById);
+router.post('/', RoleController.createRole);
+router.patch('/:id', RoleController.updateRole);
+router.delete('/:id', RoleController.deleteRole);
+
+export default router;
+```
+
+### Головний роутер
+
+```javascript
+import { Router } from 'express';
+import userRouter from './userRouter.js';
+import roleRouter from './roleRouter.js';
+const router = Router();
+
+router.use('/user', userRouter);
+router.use('/role', roleRouter);
+
+export default router;
+```
+
+### SQL запити
+
+```javascript
+export const userSQL = {
+    findUsers: `SELECT * FROM user`,
+    findUserById: `SELECT * FROM user WHERE user_id = ?`,
+    createUser: `INSERT INTO user (firstname, lastname, email, login, password) VALUES (?, ?, ?, ?, ?)`,
+    updateUserById: `UPDATE user SET firstname = ?, lastname = ?, email = ?, login = ?, password = ? WHERE user_id = ?`,
+    deleteUserById: `DELETE FROM user WHERE user_id = ?`,
+};
+
+export const roleSQL = {
+    findRoles: `SELECT * FROM role`,
+    findRoleById: `SELECT * FROM role WHERE role_id = ?`,
+    createRole: `INSERT INTO role (name) VALUES (?)`,
+    updateRoleById: `UPDATE role SET name = ? WHERE role_id = ?`,
+    deleteRoleById: `DELETE FROM role WHERE role_id = ?`,
+};
+```
+
+### Контролери для User
+
+```javascript
+import pool from '../connection.js';
+import { userSQL } from '../SQL/SQL.js';
+import { validateUserFields } from '../validation/userValidation.js';
+
+class UserController {
+    async getUsers(req, res) {
+        try {
+            const [response] = await pool.execute(userSQL.findUsers);
+            res.json(response);
+        } catch (error) {
+            res.status(500).json(error.message);
+        }
+    }
+
+    async getUserById(req, res) {
+        const { id } = req.params;
+        try {
+            const [response] = await pool.execute(userSQL.findUserById, [id]);
+
+            if (response.length === 0) {
+                return res.status(404).json({ error: 'User not found' });
+            }
+            res.json(response[0]);
+        } catch (error) {
+            res.status(500).json(error.message);
+        }
+    }
+
+    async createUser(req, res) {
+        const { firstname, lastname, email, login, password } = req.body;
+
+        try {
+            validateUserFields(req.body);
+            const [response] = await pool.execute(userSQL.createUser, [
+                firstname,
+                lastname,
+                email,
+                login,
+                password,
+            ]);
+
+            res.status(201).json({
+                message: 'User created successfully',
+                user: {
+                    id: response.insertId,
+                    firstname,
+                    lastname,
+                    email,
+                    login,
+                },
+            });
+        } catch (error) {
+            res.status(500).json(error.message);
+        }
+    }
+
+    async updateUser(req, res) {
+        const { id } = req.params;
+        const { firstname, lastname, email, login, password } = req.body;
+
+        try {
+            validateUserFields(req.body);
+            const [response] = await pool.execute(userSQL.updateUserById, [
+                firstname,
+                lastname,
+                email,
+                login,
+                password,
+                id,
+            ]);
+            if (response.affectedRows === 0) {
+                return res.status(404).json({ error: 'User not found' });
+            }
+            res.json('User updated successfully');
+        } catch (error) {
+            res.status(500).json(error.message);
+        }
+    }
+
+    async deleteUser(req, res) {
+        const { id } = req.params;
+
+        try {
+            const [response] = await pool.execute(userSQL.deleteUserById, [id]);
+
+            if (response.affectedRows === 0) {
+                return res.status(404).json({ error: 'User not found' });
+            }
+            res.json('User deleted successfully');
+        } catch (error) {
+            res.status(500).json(error.message);
+        }
+    }
+}
+export default new UserController();
+```
+
+### Контролери для Role
+
+```javascript
+import pool from '../connection.js';
+import { validateRoleFields } from '../validation/roleValidation.js';
+import { roleSQL } from '../SQL/SQL.js';
+
+class RoleController {
+    async getRoles(req, res) {
+        try {
+            const [response] = await pool.execute(roleSQL.findRoles);
+            res.json(response);
+        } catch (error) {
+            res.status(500).json(error.message);
+        }
+    }
+
+    async getRoleById(req, res) {
+        const { id } = req.params;
+
+        try {
+            const [response] = await pool.execute(roleSQL.findRoleById, [id]);
+
+            if (response.length === 0) {
+                return res.status(404).json({ error: 'Role not found' });
+            }
+
+            res.json(response[0]);
+        } catch (error) {
+            res.status(500).json(error.message);
+        }
+    }
+
+    async createRole(req, res) {
+        const { name } = req.body;
+
+        try {
+            validateRoleFields({ name });
+            const [response] = await pool.execute(roleSQL.createRole, [name]);
+            res.status(201).json({
+                message: 'Role created successfully',
+                role: { id: response.insertId, name },
+            });
+        } catch (error) {
+            res.status(500).json(error.message);
+        }
+    }
+
+    async updateRole(req, res) {
+        const { id } = req.params;
+        const { name } = req.body;
+
+        try {
+            validateRoleFields({ name });
+            const [response] = await pool.execute(roleSQL.updateRoleById, [
+                name,
+                id,
+            ]);
+
+            if (response.affectedRows === 0) {
+                return res.status(404).json({ error: 'Role not found' });
+            }
+
+            res.json('Role updated successfully');
+        } catch (error) {
+            res.status(500).json(error.message);
+        }
+    }
+
+    async deleteRole(req, res) {
+        const { id } = req.params;
+
+        try {
+            const [response] = await pool.execute(roleSQL.deleteRoleById, [id]);
+
+            if (response.affectedRows === 0) {
+                return res.status(404).json({ error: 'Role not found' });
+            }
+
+            res.json('Role deleted successfully');
+        } catch (error) {
+            res.status(500).json(error.message);
+        }
+    }
+}
+
+export default new RoleController();
+```
+
+### Валідатори
+
+```javascript
+export const validateUserFields = (data) => {
+    const requiredFields = [
+        'firstname',
+        'lastname',
+        'email',
+        'login',
+        'password',
+    ];
+
+    for (const field of requiredFields) {
+        if (!data[field]) {
+            throw new Error(`${field} is required`);
+        }
+    }
+};
+```
+
+```javascript
+export const validateRoleFields = (data) => {
+    const { name } = data;
+
+    if (!name) {
+        throw new Error('Role name is required');
+    }
+};
+```
