@@ -1,0 +1,357 @@
+<!DOCTYPE HTML>
+<html lang="uk" class="light sidebar-visible" dir="ltr">
+    <head>
+        <!-- Book generated using mdBook -->
+        <meta charset="UTF-8">
+        <title>Запити зацікавлених осіб - Система управління відкритими данними</title>
+
+
+        <!-- Custom HTML head -->
+
+        <meta name="description" content="">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <meta name="theme-color" content="#ffffff">
+
+        <link rel="icon" href="favicon.svg">
+        <link rel="shortcut icon" href="favicon.png">
+        <link rel="stylesheet" href="css/variables.css">
+        <link rel="stylesheet" href="css/general.css">
+        <link rel="stylesheet" href="css/chrome.css">
+        <link rel="stylesheet" href="css/print.css" media="print">
+
+        <!-- Fonts -->
+        <link rel="stylesheet" href="FontAwesome/css/font-awesome.css">
+        <link rel="stylesheet" href="fonts/fonts.css">
+
+        <!-- Highlight.js Stylesheets -->
+        <link rel="stylesheet" href="highlight.css">
+        <link rel="stylesheet" href="tomorrow-night.css">
+        <link rel="stylesheet" href="ayu-highlight.css">
+
+        <!-- Custom theme stylesheets -->
+
+
+        <!-- Provide site root to javascript -->
+        <script>
+            var path_to_root = "";
+            var default_theme = window.matchMedia("(prefers-color-scheme: dark)").matches ? "navy" : "light";
+        </script>
+        <!-- Start loading toc.js asap -->
+        <script src="toc.js"></script>
+    </head>
+    <body>
+    <div id="body-container">
+        <!-- Work around some values being stored in localStorage wrapped in quotes -->
+        <script>
+            try {
+                var theme = localStorage.getItem('mdbook-theme');
+                var sidebar = localStorage.getItem('mdbook-sidebar');
+
+                if (theme.startsWith('"') && theme.endsWith('"')) {
+                    localStorage.setItem('mdbook-theme', theme.slice(1, theme.length - 1));
+                }
+
+                if (sidebar.startsWith('"') && sidebar.endsWith('"')) {
+                    localStorage.setItem('mdbook-sidebar', sidebar.slice(1, sidebar.length - 1));
+                }
+            } catch (e) { }
+        </script>
+
+        <!-- Set the theme before any content is loaded, prevents flash -->
+        <script>
+            var theme;
+            try { theme = localStorage.getItem('mdbook-theme'); } catch(e) { }
+            if (theme === null || theme === undefined) { theme = default_theme; }
+            const html = document.documentElement;
+            html.classList.remove('light')
+            html.classList.add(theme);
+            html.classList.add("js");
+        </script>
+
+        <input type="checkbox" id="sidebar-toggle-anchor" class="hidden">
+
+        <!-- Hide / unhide sidebar before it is displayed -->
+        <script>
+            var sidebar = null;
+            var sidebar_toggle = document.getElementById("sidebar-toggle-anchor");
+            if (document.body.clientWidth >= 1080) {
+                try { sidebar = localStorage.getItem('mdbook-sidebar'); } catch(e) { }
+                sidebar = sidebar || 'visible';
+            } else {
+                sidebar = 'hidden';
+            }
+            sidebar_toggle.checked = sidebar === 'visible';
+            html.classList.remove('sidebar-visible');
+            html.classList.add("sidebar-" + sidebar);
+        </script>
+
+        <nav id="sidebar" class="sidebar" aria-label="Table of contents">
+            <!-- populated by js -->
+            <mdbook-sidebar-scrollbox class="sidebar-scrollbox"></mdbook-sidebar-scrollbox>
+            <noscript>
+                <iframe class="sidebar-iframe-outer" src="toc.html"></iframe>
+            </noscript>
+            <div id="sidebar-resize-handle" class="sidebar-resize-handle">
+                <div class="sidebar-resize-indicator"></div>
+            </div>
+        </nav>
+
+        <div id="page-wrapper" class="page-wrapper">
+
+            <div class="page">
+                <div id="menu-bar-hover-placeholder"></div>
+                <div id="menu-bar" class="menu-bar sticky">
+                    <div class="left-buttons">
+                        <label id="sidebar-toggle" class="icon-button" for="sidebar-toggle-anchor" title="Toggle Table of Contents" aria-label="Toggle Table of Contents" aria-controls="sidebar">
+                            <i class="fa fa-bars"></i>
+                        </label>
+                        <button id="theme-toggle" class="icon-button" type="button" title="Change theme" aria-label="Change theme" aria-haspopup="true" aria-expanded="false" aria-controls="theme-list">
+                            <i class="fa fa-paint-brush"></i>
+                        </button>
+                        <ul id="theme-list" class="theme-popup" aria-label="Themes" role="menu">
+                            <li role="none"><button role="menuitem" class="theme" id="light">Light</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="rust">Rust</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="coal">Coal</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="navy">Navy</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="ayu">Ayu</button></li>
+                        </ul>
+                        <button id="search-toggle" class="icon-button" type="button" title="Search. (Shortkey: s)" aria-label="Toggle Searchbar" aria-expanded="false" aria-keyshortcuts="S" aria-controls="searchbar">
+                            <i class="fa fa-search"></i>
+                        </button>
+                    </div>
+
+                    <h1 class="menu-title">Система управління відкритими данними</h1>
+
+                    <div class="right-buttons">
+                        <a href="print.html" title="Print this book" aria-label="Print this book">
+                            <i id="print-button" class="fa fa-print"></i>
+                        </a>
+
+                    </div>
+                </div>
+
+                <div id="search-wrapper" class="hidden">
+                    <form id="searchbar-outer" class="searchbar-outer">
+                        <input type="search" id="searchbar" name="searchbar" placeholder="Search this book ..." aria-controls="searchresults-outer" aria-describedby="searchresults-header">
+                    </form>
+                    <div id="searchresults-outer" class="searchresults-outer hidden">
+                        <div id="searchresults-header" class="searchresults-header"></div>
+                        <ul id="searchresults">
+                        </ul>
+                    </div>
+                </div>
+
+                <!-- Apply ARIA attributes after the sidebar and the sidebar toggle button are added to the DOM -->
+                <script>
+                    document.getElementById('sidebar-toggle').setAttribute('aria-expanded', sidebar === 'visible');
+                    document.getElementById('sidebar').setAttribute('aria-hidden', sidebar !== 'visible');
+                    Array.from(document.querySelectorAll('#sidebar a')).forEach(function(link) {
+                        link.setAttribute('tabIndex', sidebar === 'visible' ? 0 : -1);
+                    });
+                </script>
+
+                <div id="content" class="content">
+                    <main>
+                        <h1 id="Запити-зацікавлених-осіб"><a class="header" href="#Запити-зацікавлених-осіб">Запити зацікавлених осіб</a></h1>
+<h2 id="Вступ"><a class="header" href="#Вступ">Вступ</a></h2>
+<p>Запити зацікавлених осіб є невід'ємним елементом у процесі розробки програмного забезпечення, відображаючи вимоги та очікування різних груп користувачів. Цей документ представляє запити причетних сторін щодо системи управління відкритими даними - інструменту для зберігання, обробки та швидкого доступу до інформації. Ретельний аналіз цього документа допоможе забезпечити спільне розуміння вимог серед усіх залучених сторін та сприятиме успішній реалізації продукту.</p>
+<h3 id="Мета"><a class="header" href="#Мета">Мета</a></h3>
+<p>Мета цього документу полягає в тому, щоб описати продукт, його ключові бізнес-процеси та людей, залучених у цих процесах, визначити їх рівень доступу до системи, а також провести оцінку продукту на основі його сильних і слабких сторін. Водночас документ формулює цілі та керівні принципи створення системи управління відкритими даними з функціональністю, що приносить максимальну користь користувачам і розробникам, забезпечуючи доступність публічної інформації та ефективне її використання.</p>
+<h3 id="Контекст"><a class="header" href="#Контекст">Контекст</a></h3>
+<p>Документ аналізує взаємодію різних категорій користувачів із системою управління відкритими даними, їхні характеристики та вплив на систему. Він містить вимоги до функціоналу продукту, необхідні відомості для створення проєкту, бізнес-сценарії, огляд продукту та аналіз вимог до системи за моделлю FURPS.</p>
+<h3 id="Основні-визначення-та-скорочення"><a class="header" href="#Основні-визначення-та-скорочення">Основні визначення та скорочення</a></h3>
+<p><a href="https://en.wikipedia.org/wiki/Stakeholder_(corporate)">Зацікавлена сторона</a> (англ. Stakeholder) - юридична особа або організація, які впливають та/або зазнають впливу від продукту.</p>
+<p><a href="https://en.wikipedia.org/wiki/User_(computing)">Користувач</a> (англ. User) - зацікавлена особа, що використовує продукт.</p>
+<p><a href="https://en.wikipedia.org/wiki/Database_administrator">Адміністратор</a> (англ. Administrator) - зацікавлена особа, що займається підтримкою та забезпечує коректне функціонування продукту.</p>
+<p><a href="https://en.wikipedia.org/wiki/Database#Database_management_system">Система управління бази даних</a> (англ. Database management system) - система програмного забезпечення, що дозволяє користувачам створювати, організовувати, підтримувати та контролювати доступ до бази даних.</p>
+<p><a href="https://en.wikipedia.org/wiki/Open_data">Відкриті дані</a> (англ. Open data) - дані, які можна переглядати та використовувати будь-кому для будь-яких цілей.</p>
+<p><a href="https://en.wikipedia.org/wiki/FURPS">FURPS</a> (Functionality, Usability, Reliability, Performance, Supportability) - абревіатура, що означає "Функціональність, практичність, надійність, продуктивність, експлуатаційна придатність", характеристики, що використовуються для оцінювання програмного забезпечення.</p>
+<p><a href="https://en.wikipedia.org/wiki/User_(computing)#User_account">Обліковий запис</a> (англ. Account) — сукупність наданої інформації про користувача, засобів та прав користувача відносно багатокористувацької системи.</p>
+<p><a href="https://en.wikipedia.org/wiki/User_interface">Інтерфейс користувача</a> (англ. User Interface) — засіб зручної взаємодії користувача з інформаційною системою. Сукупність засобів для обробки та відбиття інформації, якнайбільше пристосованих для зручності користувача; у графічних системах інтерфейс користувача, втілюється багатовіконним режимом, змінами кольору, розміру, видимості вікон, їх розташуванням, сортуванням елементів вікон, гнучкими налагодженнями як самих вікон, так і окремих їх елементів.</p>
+<h3 id="Посилання"><a class="header" href="#Посилання">Посилання</a></h3>
+<p>1.<a href="https://en.wikipedia.org/wiki/Stakeholder_(corporate)">Зацікавлена сторона</a></p>
+<p>2.<a href="https://en.wikipedia.org/wiki/User_(computing)">Користувач</a></p>
+<p>3.<a href="https://en.wikipedia.org/wiki/Database_administrator">Адміністратор</a></p>
+<p>4.<a href="https://en.wikipedia.org/wiki/Database#Database_management_system">Система управління бази даних</a></p>
+<p>5.<a href="https://en.wikipedia.org/wiki/Open_data">Відкриті дані</a></p>
+<p>6.<a href="https://en.wikipedia.org/wiki/FURPS">FURPS</a></p>
+<p>7.<a href="https://en.wikipedia.org/wiki/User_(computing)#User_account">Обліковий запис</a></p>
+<p>8.<a href="https://en.wikipedia.org/wiki/User_interface">Інтерфейс користувача</a></p>
+<h2 id="Короткий-зміст"><a class="header" href="#Короткий-зміст">Короткий зміст</a></h2>
+<ol>
+<li><a href="#%D1%85%D0%B0%D1%80%D0%B0%D0%BA%D1%82%D0%B5%D1%80%D0%B8%D1%81%D1%82%D0%B8%D0%BA%D0%B0-%D0%B4%D1%96%D0%BB%D0%BE%D0%B2%D0%B8%D1%85-%D0%BF%D1%80%D0%BE%D1%86%D0%B5%D1%81%D1%96%D0%B2">Характеристика ділових процесів</a>
+<ul>
+<li><a href="#SearchData">Знайти дані в системі за запитом</a></li>
+<li><a href="#DownloadData">Завантажити дані з системи</a></li>
+<li><a href="#UploadData">Завантажити дані в систему</a></li>
+<li><a href="#EditData">Змінити дані в системі</a></li>
+<li><a href="#DeleteData">Видалити дані з системи</a></li>
+</ul>
+</li>
+<li><a href="#%D0%BA%D0%BE%D1%80%D0%BE%D1%82%D0%BA%D0%B8%D0%B9-%D0%BE%D0%B3%D0%BB%D1%8F%D0%B4-%D0%BF%D1%80%D0%BE%D0%B4%D1%83%D0%BA%D1%82%D1%83">Короткий огляд продукту</a></li>
+<li><a href="#%D1%84%D1%83%D0%BD%D0%BA%D1%86%D1%96%D0%BE%D0%BD%D0%B0%D0%BB%D1%8C%D0%BD%D1%96%D1%81%D1%82%D1%8C">Функціональність</a></li>
+<li><a href="#%D0%BF%D1%80%D0%B0%D0%BA%D1%82%D0%B8%D1%87%D0%BD%D1%96%D1%81%D1%82%D1%8C">Практичність</a></li>
+<li><a href="#%D0%BD%D0%B0%D0%B4%D1%96%D0%B9%D0%BD%D1%96%D1%81%D1%82%D1%8C">Надійність</a></li>
+<li><a href="#%D0%BF%D1%80%D0%BE%D0%B4%D1%83%D0%BA%D1%82%D0%B8%D0%B2%D0%BD%D1%96%D1%81%D1%82%D1%8C">Продуктивність</a></li>
+<li><a href="#%D0%B5%D0%BA%D1%81%D0%BF%D0%BB%D1%83%D0%B0%D1%82%D0%B0%D1%86%D1%96%D0%B9%D0%BD%D0%B0-%D0%BF%D1%80%D0%B8%D0%B4%D0%B0%D1%82%D0%BD%D1%96%D1%81%D1%82%D1%8C">Експлуатаційна придатність</a></li>
+</ol>
+<h2 id="Характеристика-ділових-процесів"><a class="header" href="#Характеристика-ділових-процесів">Характеристика ділових процесів</a></h2>
+<div class="table-wrapper"><table><thead><tr><th><strong>ID:</strong></th><th><span id="SearchData"> SearchData </span></th></tr></thead><tbody>
+<tr><td><strong>НАЗВА:</strong></td><td>Знайти дані в системі за запитом</td></tr>
+<tr><td><strong>УЧАСНИКИ:</strong></td><td>Користувач, Система</td></tr>
+<tr><td><strong>ПЕРЕДУМОВИ:</strong></td><td>Наявність бази даних для пошуку</td></tr>
+<tr><td><strong>РЕЗУЛЬТАТ:</strong></td><td>Шукані дані відображено</td></tr>
+<tr><td><strong>ВИКЛЮЧНІ СИТУАЦІЇ:</strong></td><td>Дані не знайдено - DataNotFound</td></tr>
+<tr><td><strong>ОСНОВНИЙ СЦЕНАРІЙ:</strong></td><td>1. Користувач натискає кнопку "Пошук" на головній сторінці. <br/> 2. Користувач вводить пошуковий запит в пошуковий рядок. <br/> 3. Користувач натискає кнопку "Знайти". <br/> 4. Система здіснює пошук за запитом. <br/> 5. Система відображає шукані дані користувачу.</td></tr>
+</tbody></table>
+</div><div class="table-wrapper"><table><thead><tr><th><strong>ID:</strong></th><th><span id="DownloadData"> DownloadData </span></th></tr></thead><tbody>
+<tr><td><strong>НАЗВА:</strong></td><td>Завантажити дані з системи</td></tr>
+<tr><td><strong>УЧАСНИКИ:</strong></td><td>Користувач, Система</td></tr>
+<tr><td><strong>ПЕРЕДУМОВИ:</strong></td><td>Користувач авторизований у системі</td></tr>
+<tr><td><strong>РЕЗУЛЬТАТ:</strong></td><td>Дані завантажено на пристрій користувача</td></tr>
+<tr><td><strong>ВИКЛЮЧНІ СИТУАЦІЇ:</strong></td><td>Помилка завантаження - DownloadError <br/> Даних не існує - DataDoesNotExist</td></tr>
+<tr><td><strong>ОСНОВНИЙ СЦЕНАРІЙ:</strong></td><td>1. Користувач натискає кнопку "Завантажити" на сторінці з даними. <br/> 2. Користувач обирає формат файлу даних. <br/> 3. Користувач натискає кнопку "Підтвердити". <br/> 4. Система створює файл з даними. <br/> 5. Система завантажує дані на пристрій користувача.</td></tr>
+</tbody></table>
+</div><div class="table-wrapper"><table><thead><tr><th><strong>ID:</strong></th><th><span id="UploadData"> UploadData </span></th></tr></thead><tbody>
+<tr><td><strong>НАЗВА:</strong></td><td>Завантажити дані в систему</td></tr>
+<tr><td><strong>УЧАСНИКИ:</strong></td><td>Користувач, Система</td></tr>
+<tr><td><strong>ПЕРЕДУМОВИ:</strong></td><td>Користувач авторизований у системі</td></tr>
+<tr><td><strong>РЕЗУЛЬТАТ:</strong></td><td>Дані збережено в системі</td></tr>
+<tr><td><strong>ВИКЛЮЧНІ СИТУАЦІЇ:</strong></td><td>Файл не підтримується або пошкоджений - InvalidData</td></tr>
+<tr><td><strong>ОСНОВНИЙ СЦЕНАРІЙ:</strong></td><td>1. Користувач натискає кнопку "Додати дані" на головній сторінці. <br/> 2. Користувач обирає файл з даними на пристрої. <br/> 3. Користувач натискає кнопку "Додати". <br/> 4. Система обробляє дані. <br/> 5. Система зберігає дані в базі.</td></tr>
+</tbody></table>
+</div><div class="table-wrapper"><table><thead><tr><th><strong>ID:</strong></th><th><span id="EditData"> EditData </span></th></tr></thead><tbody>
+<tr><td><strong>НАЗВА:</strong></td><td>Змінити дані в системі</td></tr>
+<tr><td><strong>УЧАСНИКИ:</strong></td><td>Користувач, Система</td></tr>
+<tr><td><strong>ПЕРЕДУМОВИ:</strong></td><td>Користувач авторизований у системі <br/> Користувач має право на редагування даних</td></tr>
+<tr><td><strong>РЕЗУЛЬТАТ:</strong></td><td>Дані змінено</td></tr>
+<tr><td><strong>ВИКЛЮЧНІ СИТУАЦІЇ:</strong></td><td>Неправильний формат змінених даних - InvalidData</td></tr>
+<tr><td><strong>ОСНОВНИЙ СЦЕНАРІЙ:</strong></td><td>1. Користувач натискає кнопку "Змінити" на сторінці з даними. <br/> 2. Користувач вносить необхідні зміни. <br/> 3. Користувач натискає кнопку "Зберегти". <br/> 4. Система обробляє дані. <br/> 5. Система зберігає змінені дані.</td></tr>
+</tbody></table>
+</div><div class="table-wrapper"><table><thead><tr><th><strong>ID:</strong></th><th><span id="DeleteData"> DeleteData </span></th></tr></thead><tbody>
+<tr><td><strong>НАЗВА:</strong></td><td>Видалити дані з системи</td></tr>
+<tr><td><strong>УЧАСНИКИ:</strong></td><td>Користувач, Система</td></tr>
+<tr><td><strong>ПЕРЕДУМОВИ:</strong></td><td>Користувач авторизований у системі <br/> Користувач має право на видалення даних</td></tr>
+<tr><td><strong>РЕЗУЛЬТАТ:</strong></td><td>Дані видалено</td></tr>
+<tr><td><strong>ВИКЛЮЧНІ СИТУАЦІЇ:</strong></td><td>Даних не існує - DataDoesNotExist</td></tr>
+<tr><td><strong>ОСНОВНИЙ СЦЕНАРІЙ:</strong></td><td>1. Користувач натискає кнопку "Видалити" на сторінці з даними. <br/> 2. Користувач натискає кнопку "Підтвердити". <br/> 3. Система видаляє дані з бази.</td></tr>
+</tbody></table>
+</div>
+<h2 id="Короткий-огляд-продукту"><a class="header" href="#Короткий-огляд-продукту">Короткий огляд продукту</a></h2>
+<p>Наша система управління відкритими даними надасть широкий спектр можливостей для роботи з великими обсягами даних та отримання потрібної інформації з них.<br />
+Система буде мати простий та інтуїтивний інтерфейс і надасть можливості, яких не вистачає деяким сучасним сервісам, а саме:</p>
+<ul>
+<li>можливість авторизовуватись;</li>
+<li>можливість створення та редагування даних;</li>
+<li>візуалізацію даних;</li>
+<li>наявність докуметації та FAQ.</li>
+</ul>
+<p>Також наш інструмент буде підтримувати актуальність даних та зворотній зв'язок.</p>
+<p>Гості сервісу зможуть знаходити потрібну інформацію, а зареєструвавшись, зможуть створювати запити на завантаження та редагування даних.<br />
+Крім того, буде наявна адміністрація, що буде керувати запитами користувачів.</p>
+<p><em>Нижче йде опис FURPS:</em></p>
+<h2 id="Функціональність"><a class="header" href="#Функціональність">Функціональність</a></h2>
+<p><em><strong>Гість:</strong></em></p>
+<ul>
+<li>Реєстрація облікового запису у системі для отримання можливостей, які недоступні гостям.</li>
+<li>Перегляд відкритих даних без необхідності авторизації.</li>
+<li>Користування фільтрами та пошук вибраних даних за ключовими словами, категоріями, датами тощо.</li>
+</ul>
+<p><em><strong>Користувач:</strong></em></p>
+<ul>
+<li>Можливість взаємодії з іншими користувачами системи.</li>
+<li>Можливість завантаження власних даних у систему та їх редагування у наданому режимі редагування.</li>
+<li>Завантаження доступних даних з системи у зручних форматах.</li>
+<li>Візуалізація даних обраним способом.</li>
+</ul>
+<p><em><strong>Адміністратор:</strong></em></p>
+<ul>
+<li>Блокування чи обмеження користувачів через порушення правил.</li>
+<li>Завантаження власних даних до системи, редагування чи видалення існуючих даних системи.</li>
+<li>Надання допомоги користувачам у разі потреби.</li>
+<li>Створення технічної документації щодо використання системи.</li>
+</ul>
+<h2 id="Практичність"><a class="header" href="#Практичність">Практичність</a></h2>
+<ul>
+<li>Простий та зрозумілий інтерфейс застосунку.</li>
+<li>Наявність довідки.</li>
+<li>Підтримка аналізу даних.</li>
+<li>Легкий пошук та доступ.</li>
+<li>Робота в браузері, без необхідності встановлення.</li>
+<li>Кросплатформеність.</li>
+<li>Адаптивний дизайн.</li>
+</ul>
+<h2 id="Надійність"><a class="header" href="#Надійність">Надійність</a></h2>
+<ul>
+<li>Захист від втрати даних і збереження конфіденційності інформації є ключовими аспектами надійності системи.</li>
+<li>Система забезпечує стійку роботу навіть за умов пікових навантажень або під час одночасного використання багатьма користувачами.</li>
+<li>Система має механізми для відновлення після збоїв і забезпечує безперервну роботу без серйозних перешкод для користувачів.</li>
+<li>Забезпечення регулярних оновлень для виправлення помилок, усунення вразливостей і додавання нових функцій без порушення роботи системи.</li>
+</ul>
+<h2 id="Продуктивність"><a class="header" href="#Продуктивність">Продуктивність</a></h2>
+<ul>
+<li>Використання ефективних запитів і індексів у базі даних для швидкого доступу до інформації.</li>
+<li>Зберігання часто використовуваних даних у кеші для швидкого доступу, що допомагає зменшити час відповіді на запити.</li>
+<li>Розробка системи з урахуванням можливості масштабування, щоб забезпечити плавну роботу при збільшенні обсягу даних та навантаження.</li>
+<li>Постійний моніторинг відправлення та отримання даних, щоб ідентифікувати можливі проблеми та вчасно їх виправляти.</li>
+</ul>
+<h2 id="Експлуатаційна-придатність"><a class="header" href="#Експлуатаційна-придатність">Експлуатаційна придатність</a></h2>
+<ul>
+<li>Зрозуміла та структурована документація, що містить детальні описи функцій, інструкції з використання та практичні рекомендації для зручності користувачів.</li>
+<li>Покрокові інструкції та приклади використання, що допомагають користувачам максимально ефективно освоїти функціонал системи.</li>
+<li>Інтерактивний механізм зворотного зв'язку, який дозволяє швидко повідомляти про проблеми та баги, з оперативним вирішенням цих питань.</li>
+<li>Програмний код системи написаний із застосуванням патернів проєктування та з дотримання принципів чистого коду.</li>
+<li>Розміщення коду системи на сервісах для спільної розробки, наприклад Github.</li>
+</ul>
+
+                    </main>
+
+                    <nav class="nav-wrapper" aria-label="Page navigation">
+                        <!-- Mobile navigation buttons -->
+                            <a rel="prev" href="state-of-the-art.html" class="mobile-nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
+                                <i class="fa fa-angle-left"></i>
+                            </a>
+
+                            <a rel="next prefetch" href="use_cases.html" class="mobile-nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
+                                <i class="fa fa-angle-right"></i>
+                            </a>
+
+                        <div style="clear: both"></div>
+                    </nav>
+                </div>
+            </div>
+
+            <nav class="nav-wide-wrapper" aria-label="Page navigation">
+                    <a rel="prev" href="state-of-the-art.html" class="nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
+                        <i class="fa fa-angle-left"></i>
+                    </a>
+
+                    <a rel="next prefetch" href="use_cases.html" class="nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
+                        <i class="fa fa-angle-right"></i>
+                    </a>
+            </nav>
+
+        </div>
+
+
+
+
+        <script>
+            window.playground_copyable = true;
+        </script>
+
+
+        <script src="elasticlunr.min.js"></script>
+        <script src="mark.min.js"></script>
+        <script src="searcher.js"></script>
+
+        <script src="clipboard.min.js"></script>
+        <script src="highlight.js"></script>
+        <script src="book.js"></script>
+
+        <!-- Custom JS scripts -->
+
+
+    </div>
+    </body>
+</html>
