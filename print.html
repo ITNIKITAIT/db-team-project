@@ -1128,7 +1128,7 @@
 <p><img src="https://github.com/user-attachments/assets/ccf12cd9-57e9-4c3b-bec0-b60074ed3edf" alt="opendata" /></p>
 <div style="break-before: page; page-break-before: always;"></div><h1 id="Реалізація-інформаційного-та-програмного-забезпечення"><a class="header" href="#Реалізація-інформаційного-та-програмного-забезпечення">Реалізація інформаційного та програмного забезпечення</a></h1>
 <h2 id="sql-скрипт-для-створення-на-початкового-наповнення-бази-даних"><a class="header" href="#sql-скрипт-для-створення-на-початкового-наповнення-бази-даних">SQL-скрипт для створення на початкового наповнення бази даних</a></h2>
-<pre><code class="language-mysql">
+<pre><code class="language-sql">
 -- MySQL Workbench Forward Engineering
 
 SET @OLD_UNIQUE_CHECKS=@@UNIQUE_CHECKS, UNIQUE_CHECKS=0;
@@ -1374,16 +1374,363 @@ COMMIT;
 
 </code></pre>
 <h2 id="restfull-сервіс-для-управління-даними"><a class="header" href="#restfull-сервіс-для-управління-даними">RESTfull сервіс для управління даними</a></h2>
+<h3 id="Підключення-до-бази-даних"><a class="header" href="#Підключення-до-бази-даних">Підключення до бази даних</a></h3>
+<pre><code class="language-javascript">import mysql from 'mysql2/promise';
+import dotenv from 'dotenv';
+
+dotenv.config();
+
+const pool = mysql.createPool({
+    host: 'localhost',
+    user: 'root',
+    password: process.env.DB_PASSWORD,
+    database: 'opendatamodel',
+    waitForConnections: true,
+});
+
+export default pool;
+</code></pre>
+<h3 id="Налаштування-сервера"><a class="header" href="#Налаштування-сервера">Налаштування сервера</a></h3>
+<pre><code class="language-javascript">import router from './router/router.js';
+import express from 'express';
+
+const PORT = process.env.PORT || 5000;
+const app = express();
+
+app.use(express.json());
+
+app.use('/api', router);
+
+app.listen(PORT, () =&gt; {
+    console.log(`Server is running on http://localhost:${PORT}`);
+});
+</code></pre>
+<h3 id="Маршрути-для-user"><a class="header" href="#Маршрути-для-user">Маршрути для User</a></h3>
+<pre><code class="language-javascript">import { Router } from 'express';
+import UserController from '../controllers/UserController.js';
+const router = Router();
+
+router.get('/all', UserController.getUsers);
+router.get('/:id', UserController.getUserById);
+router.post('/', UserController.createUser);
+router.patch('/:id', UserController.updateUser);
+router.delete('/:id', UserController.deleteUser);
+
+export default router;
+</code></pre>
+<h3 id="Маршрути-для-role"><a class="header" href="#Маршрути-для-role">Маршрути для Role</a></h3>
+<pre><code class="language-javascript">import { Router } from 'express';
+import RoleController from '../controllers/RoleController.js';
+const router = Router();
+
+router.get('/all', RoleController.getRoles);
+router.get('/:id', RoleController.getRoleById);
+router.post('/', RoleController.createRole);
+router.patch('/:id', RoleController.updateRole);
+router.delete('/:id', RoleController.deleteRole);
+
+export default router;
+</code></pre>
+<h3 id="Головний-роутер"><a class="header" href="#Головний-роутер">Головний роутер</a></h3>
+<pre><code class="language-javascript">import { Router } from 'express';
+import userRouter from './userRouter.js';
+import roleRouter from './roleRouter.js';
+const router = Router();
+
+router.use('/user', userRouter);
+router.use('/role', roleRouter);
+
+export default router;
+</code></pre>
+<h3 id="sql-запити"><a class="header" href="#sql-запити">SQL запити</a></h3>
+<pre><code class="language-javascript">export const userSQL = {
+    findUsers: `SELECT * FROM user`,
+    findUserById: `SELECT * FROM user WHERE user_id = ?`,
+    createUser: `INSERT INTO user (firstname, lastname, email, login, password) VALUES (?, ?, ?, ?, ?)`,
+    updateUserById: `UPDATE user SET firstname = ?, lastname = ?, email = ?, login = ?, password = ? WHERE user_id = ?`,
+    deleteUserById: `DELETE FROM user WHERE user_id = ?`,
+};
+
+export const roleSQL = {
+    findRoles: `SELECT * FROM role`,
+    findRoleById: `SELECT * FROM role WHERE role_id = ?`,
+    createRole: `INSERT INTO role (name) VALUES (?)`,
+    updateRoleById: `UPDATE role SET name = ? WHERE role_id = ?`,
+    deleteRoleById: `DELETE FROM role WHERE role_id = ?`,
+};
+</code></pre>
+<h3 id="Контролери-для-user"><a class="header" href="#Контролери-для-user">Контролери для User</a></h3>
+<pre><code class="language-javascript">import pool from '../connection.js';
+import { userSQL } from '../SQL/SQL.js';
+import { validateUserFields } from '../validation/userValidation.js';
+
+class UserController {
+    async getUsers(req, res) {
+        try {
+            const [response] = await pool.execute(userSQL.findUsers);
+            res.json(response);
+        } catch (error) {
+            res.status(500).json(error.message);
+        }
+    }
+
+    async getUserById(req, res) {
+        const { id } = req.params;
+        try {
+            const [response] = await pool.execute(userSQL.findUserById, [id]);
+
+            if (response.length === 0) {
+                return res.status(404).json({ error: 'User not found' });
+            }
+            res.json(response[0]);
+        } catch (error) {
+            res.status(500).json(error.message);
+        }
+    }
+
+    async createUser(req, res) {
+        const { firstname, lastname, email, login, password } = req.body;
+
+        try {
+            validateUserFields(req.body);
+            const [response] = await pool.execute(userSQL.createUser, [
+                firstname,
+                lastname,
+                email,
+                login,
+                password,
+            ]);
+
+            res.status(201).json({
+                message: 'User created successfully',
+                user: {
+                    id: response.insertId,
+                    firstname,
+                    lastname,
+                    email,
+                    login,
+                },
+            });
+        } catch (error) {
+            res.status(500).json(error.message);
+        }
+    }
+
+    async updateUser(req, res) {
+        const { id } = req.params;
+        const { firstname, lastname, email, login, password } = req.body;
+
+        try {
+            validateUserFields(req.body);
+            const [response] = await pool.execute(userSQL.updateUserById, [
+                firstname,
+                lastname,
+                email,
+                login,
+                password,
+                id,
+            ]);
+            if (response.affectedRows === 0) {
+                return res.status(404).json({ error: 'User not found' });
+            }
+            res.json('User updated successfully');
+        } catch (error) {
+            res.status(500).json(error.message);
+        }
+    }
+
+    async deleteUser(req, res) {
+        const { id } = req.params;
+
+        try {
+            const [response] = await pool.execute(userSQL.deleteUserById, [id]);
+
+            if (response.affectedRows === 0) {
+                return res.status(404).json({ error: 'User not found' });
+            }
+            res.json('User deleted successfully');
+        } catch (error) {
+            res.status(500).json(error.message);
+        }
+    }
+}
+export default new UserController();
+</code></pre>
+<h3 id="Контролери-для-role"><a class="header" href="#Контролери-для-role">Контролери для Role</a></h3>
+<pre><code class="language-javascript">import pool from '../connection.js';
+import { validateRoleFields } from '../validation/roleValidation.js';
+import { roleSQL } from '../SQL/SQL.js';
+
+class RoleController {
+    async getRoles(req, res) {
+        try {
+            const [response] = await pool.execute(roleSQL.findRoles);
+            res.json(response);
+        } catch (error) {
+            res.status(500).json(error.message);
+        }
+    }
+
+    async getRoleById(req, res) {
+        const { id } = req.params;
+
+        try {
+            const [response] = await pool.execute(roleSQL.findRoleById, [id]);
+
+            if (response.length === 0) {
+                return res.status(404).json({ error: 'Role not found' });
+            }
+
+            res.json(response[0]);
+        } catch (error) {
+            res.status(500).json(error.message);
+        }
+    }
+
+    async createRole(req, res) {
+        const { name } = req.body;
+
+        try {
+            validateRoleFields({ name });
+            const [response] = await pool.execute(roleSQL.createRole, [name]);
+            res.status(201).json({
+                message: 'Role created successfully',
+                role: { id: response.insertId, name },
+            });
+        } catch (error) {
+            res.status(500).json(error.message);
+        }
+    }
+
+    async updateRole(req, res) {
+        const { id } = req.params;
+        const { name } = req.body;
+
+        try {
+            validateRoleFields({ name });
+            const [response] = await pool.execute(roleSQL.updateRoleById, [
+                name,
+                id,
+            ]);
+
+            if (response.affectedRows === 0) {
+                return res.status(404).json({ error: 'Role not found' });
+            }
+
+            res.json('Role updated successfully');
+        } catch (error) {
+            res.status(500).json(error.message);
+        }
+    }
+
+    async deleteRole(req, res) {
+        const { id } = req.params;
+
+        try {
+            const [response] = await pool.execute(roleSQL.deleteRoleById, [id]);
+
+            if (response.affectedRows === 0) {
+                return res.status(404).json({ error: 'Role not found' });
+            }
+
+            res.json('Role deleted successfully');
+        } catch (error) {
+            res.status(500).json(error.message);
+        }
+    }
+}
+
+export default new RoleController();
+</code></pre>
+<h3 id="Валідатори"><a class="header" href="#Валідатори">Валідатори</a></h3>
+<pre><code class="language-javascript">export const validateUserFields = (data) =&gt; {
+    const requiredFields = [
+        'firstname',
+        'lastname',
+        'email',
+        'login',
+        'password',
+    ];
+
+    for (const field of requiredFields) {
+        if (!data[field]) {
+            throw new Error(`${field} is required`);
+        }
+    }
+};
+</code></pre>
+<pre><code class="language-javascript">export const validateRoleFields = (data) =&gt; {
+    const { name } = data;
+
+    if (!name) {
+        throw new Error('Role name is required');
+    }
+};
+</code></pre>
 <div style="break-before: page; page-break-before: always;"></div><h1 id="Тестування-працездатності-системи"><a class="header" href="#Тестування-працездатності-системи">Тестування працездатності системи</a></h1>
-<p><em>В цьому розділі необхідно вказати засоби тестування, навести вихідні коди тестів та результати тестування.</em></p>
+<p>Тестування відбувається за допомогою програми Postman</p>
+<h3 id="Запуск-сервера"><a class="header" href="#Запуск-сервера">Запуск сервера</a></h3>
+<p align="center">
+    <img src="./images/1.png">
+</p>
+<h3 id="get-userall"><a class="header" href="#get-userall">GET /user/all</a></h3>
+<p align="center">
+    <img src="./images/2.png">
+</p>
+<h3 id="get-userid"><a class="header" href="#get-userid">GET /user/:id</a></h3>
+<p align="center">
+    <img src="./images/3.png">
+</p>
+<h3 id="post-user"><a class="header" href="#post-user">POST /user</a></h3>
+<p align="center">
+    <img src="./images/4.png">
+</p>
+<h3 id="patch-userid"><a class="header" href="#patch-userid">PATCH /user/:id</a></h3>
+<p align="center">
+    <img src="./images/5.png">
+</p>
+<h3 id="delete-userid"><a class="header" href="#delete-userid">DELETE /user/:id</a></h3>
+<p align="center">
+    <img src="./images/6.png">
+</p>
+<h3 id="get-roleall"><a class="header" href="#get-roleall">GET /role/all</a></h3>
+<p align="center">
+    <img src="./images/7.png">
+</p>
+<h3 id="get-roleid"><a class="header" href="#get-roleid">GET /role/:id</a></h3>
+<p align="center">
+    <img src="./images/8.png">
+</p>
+<h3 id="post-role"><a class="header" href="#post-role">POST /role</a></h3>
+<p align="center">
+    <img src="./images/9.png">
+</p>
+<h3 id="patch-roleid"><a class="header" href="#patch-roleid">PATCH /role/:id</a></h3>
+<p align="center">
+    <img src="./images/10.png">
+</p>
+<h3 id="delete-roleid"><a class="header" href="#delete-roleid">DELETE /role/:id</a></h3>
+<p align="center">
+    <img src="./images/11.png">
+</p>
+<h3 id="get-with-wrong-id"><a class="header" href="#get-with-wrong-id">GET with wrong id</a></h3>
+<p align="center">
+    <img src="./images/12.png">
+</p>
+<h3 id="post-without-required-fields"><a class="header" href="#post-without-required-fields">POST without required fields</a></h3>
+<p align="center">
+    <img src="./images/13.png">
+</p>
+<h3 id="patch-with-wrong-id"><a class="header" href="#patch-with-wrong-id">PATCH with wrong id</a></h3>
+<p align="center">
+    <img src="./images/14.png">
+</p>
+<h3 id="delete-with-wrong-id"><a class="header" href="#delete-with-wrong-id">DELETE with wrong id</a></h3>
+<p align="center">
+    <img src="./images/15.png">
+</p>
 <div style="break-before: page; page-break-before: always;"></div><h1 id="Висновки-1"><a class="header" href="#Висновки-1">Висновки</a></h1>
-<p>У висновках наводять оцінку отриманих результатів, можливі галузі його використання. Висновки повинні містити в собі коротку узагальнену оцінку результатів розробки, у
-тому числі і з погляду на їх технічно-економічну ефективність. Необхідно порівняти
-отримані результати усіх характеристик об’єкта проєктування із завданням і з основними показниками сучасних аналогічних об’єктів.</p>
-<p>Необхідно вказати яке нове технічне рішення покладене в основу проєкту і у чому її
-переваги, що нового було запропоновано самим студентом.</p>
-<p>На базі отриманих висновків можуть надаватися рекомендації по використанню розробки. Вони повинні
-мати конкретний характер і бути цілком підтверджені проєктом.</p>
+<p>Розроблена система управління відкритими даними є потужним та ефективним інструментом, який поєднує в собі оптимізовану структуру бази даних, передові алгоритми обробки даних та високу безпеку. Вона дозволяє зручно та надійно працювати з великими обсягами інформації, забезпечуючи легку масштабованість і підтримку в майбутньому. Система відповідає сучасним вимогам до продуктивності, безпеки та конфіденційності, що робить її перспективною для подальшого використання та розвитку.</p>
 
                     </main>
 
